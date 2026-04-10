@@ -403,3 +403,6 @@ FodyWeavers.xsd
 solution-config.props
 # Publish Profiles
 !**/Properties/PublishProfiles/*.pubxml
+
+# macOS Finder metadata
+.DS_Store
