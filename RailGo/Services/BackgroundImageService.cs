@@ -22,6 +22,11 @@ public class BackgroundImageService : IBackgroundImageService
         get; private set;
     }
 
+    public string? LastErrorMessage
+    {
+        get; private set;
+    }
+
     public event EventHandler<string?>? BackgroundImageChanged;
 
     public BackgroundImageService(ILocalSettingsService localSettingsService)
@@ -49,6 +54,8 @@ public class BackgroundImageService : IBackgroundImageService
 
     public async Task<bool> PickAndSetBackgroundImageAsync()
     {
+        LastErrorMessage = null;
+
         try
         {
             var picker = new FileOpenPicker();
@@ -84,17 +91,21 @@ public class BackgroundImageService : IBackgroundImageService
             BackgroundImagePath = destinationPath;
             await _localSettingsService.SaveSettingAsync(SettingsKey, BackgroundImagePath);
             BackgroundImageChanged?.Invoke(this, BackgroundImagePath);
+            LastErrorMessage = null;
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            LastErrorMessage = $"{ex.GetType().Name}: {ex.Message}";
             return false;
         }
     }
 
     public async Task ClearBackgroundImageAsync()
     {
+        LastErrorMessage = null;
+
         var backgroundFolderPath = EnsureBackgroundFolder();
         DeleteExistingBackgroundFiles(backgroundFolderPath);
 

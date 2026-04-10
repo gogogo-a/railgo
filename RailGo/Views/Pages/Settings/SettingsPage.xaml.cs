@@ -86,10 +86,15 @@ public sealed partial class SettingsPage : Page
 
     private async void OnChooseBackgroundImageClicked(object sender, RoutedEventArgs e)
     {
+        HideBackgroundErrorInfoBar();
+
         var isSuccess = await _backgroundImageService.PickAndSetBackgroundImageAsync();
         if (!isSuccess)
         {
-            BackgroundImagePathTextBlock.Text = "设置失败：请确认图片可访问，或重试选择 jpg/png/bmp/webp。";
+            if (!string.IsNullOrWhiteSpace(_backgroundImageService.LastErrorMessage))
+            {
+                ShowBackgroundErrorInfoBar(_backgroundImageService.LastErrorMessage);
+            }
             return;
         }
 
@@ -98,8 +103,17 @@ public sealed partial class SettingsPage : Page
 
     private async void OnClearBackgroundImageClicked(object sender, RoutedEventArgs e)
     {
-        await _backgroundImageService.ClearBackgroundImageAsync();
-        UpdateBackgroundImageUiState();
+        HideBackgroundErrorInfoBar();
+
+        try
+        {
+            await _backgroundImageService.ClearBackgroundImageAsync();
+            UpdateBackgroundImageUiState();
+        }
+        catch (Exception ex)
+        {
+            ShowBackgroundErrorInfoBar($"{ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     private void OnBackgroundImageChanged(object? sender, string? imagePath)
@@ -122,5 +136,17 @@ public sealed partial class SettingsPage : Page
             ? $"当前：{imagePath}"
             : "当前：默认背景";
         ClearBackgroundButton.IsEnabled = hasCustomBackground;
+    }
+
+    private void ShowBackgroundErrorInfoBar(string message)
+    {
+        BackgroundErrorInfoBar.Message = message;
+        BackgroundErrorInfoBar.IsOpen = true;
+    }
+
+    private void HideBackgroundErrorInfoBar()
+    {
+        BackgroundErrorInfoBar.IsOpen = false;
+        BackgroundErrorInfoBar.Message = string.Empty;
     }
 }

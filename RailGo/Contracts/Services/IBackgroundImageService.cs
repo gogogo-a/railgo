@@ -7,6 +7,11 @@ public interface IBackgroundImageService
         get;
     }
 
+    string? LastErrorMessage
+    {
+        get;
+    }
+
     event EventHandler<string?>? BackgroundImageChanged;
 
     Task InitializeAsync();

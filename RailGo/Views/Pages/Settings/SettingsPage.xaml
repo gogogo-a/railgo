@@ -11,6 +11,13 @@
     mc:Ignorable="d">
     <Grid>
         <StackPanel x:Name="ContentArea">
+            <InfoBar
+                x:Name="BackgroundErrorInfoBar"
+                IsOpen="False"
+                IsClosable="True"
+                Severity="Error"
+                Title="背景设置失败"
+                Margin="{StaticResource XSmallTopMargin}" />
             <StackPanel Margin="{StaticResource SmallTopBottomMargin}">
                 <TextBlock Text="数据源设置" Style="{ThemeResource SubtitleTextBlockStyle}" 
                                Margin="{StaticResource XSmallTopMargin}"/>
