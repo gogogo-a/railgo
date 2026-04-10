@@ -71,10 +71,18 @@ if ($SkipInstaller) {
 
 $isccCandidates = @(
     (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"),
-    (Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe")
+    (Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe"),
+    (Join-Path $env:LocalAppData "Programs\Inno Setup 6\ISCC.exe")
 ) | Where-Object { $_ -and (Test-Path $_) }
 
 $isccPath = $isccCandidates | Select-Object -First 1
+
+if (-not $isccPath) {
+    $isccCommand = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+    if ($isccCommand) {
+        $isccPath = $isccCommand.Source
+    }
+}
 
 if (-not $isccPath) {
     throw "Inno Setup 6 is not installed. Install with: winget install -e --id JRSoftware.InnoSetup"
