@@ -52,6 +52,7 @@ dotnet publish $projectPath `
     -c $Configuration `
     -r $RuntimeIdentifier `
     -f net8.0-windows10.0.22621.0 `
+    --self-contained true `
     -p:WindowsPackageType=None `
     -p:WindowsAppSDKSelfContained=true `
     -p:PublishSingleFile=false `
