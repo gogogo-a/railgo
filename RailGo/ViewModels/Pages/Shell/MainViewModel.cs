@@ -122,7 +122,7 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
-            BannerImages.Add("ms-appx:///Assets/AutoBanner.png");
+            BannerImages.Add("/Assets/HomeBanner.jpg");
             var images = await SettingsAPIService.GetBannerImagesAsync();
 
             if (images?.Count > 0)
