@@ -1,7 +1,8 @@
 param(
     [string]$Configuration = "Release",
     [string]$RuntimeIdentifier = "win-x64",
-    [string]$Version = "1.0.0"
+    [string]$Version = "1.0.0",
+    [switch]$SkipInstaller
 )
 
 $ErrorActionPreference = "Stop"
@@ -27,6 +28,26 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
 New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
 New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
 
+# Restore with retries to reduce transient network failures.
+$restoreSucceeded = $false
+$maxRestoreRetries = 4
+for ($attempt = 1; $attempt -le $maxRestoreRetries; $attempt++) {
+    Write-Host "dotnet restore attempt $attempt/$maxRestoreRetries..."
+    dotnet restore $projectPath --disable-parallel
+    if ($LASTEXITCODE -eq 0) {
+        $restoreSucceeded = $true
+        break
+    }
+
+    if ($attempt -lt $maxRestoreRetries) {
+        Start-Sleep -Seconds (5 * $attempt)
+    }
+}
+
+if (-not $restoreSucceeded) {
+    throw "dotnet restore failed after multiple attempts. Check network/proxy/VPN and NuGet source."
+}
+
 dotnet publish $projectPath `
     -c $Configuration `
     -r $RuntimeIdentifier `
@@ -35,7 +56,18 @@ dotnet publish $projectPath `
     -p:WindowsAppSDKSelfContained=true `
     -p:PublishSingleFile=false `
     -p:PublishTrimmed=false `
+    --no-restore `
     -o $publishDir
+
+if ($LASTEXITCODE -ne 0) {
+    throw "dotnet publish failed. See errors above."
+}
+
+if ($SkipInstaller) {
+    Write-Host "Publish succeeded. Installer step skipped because -SkipInstaller was provided."
+    Write-Host "Publish output directory: $publishDir"
+    exit 0
+}
 
 $isccCandidates = @(
     (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"),
@@ -45,7 +77,7 @@ $isccCandidates = @(
 $isccPath = $isccCandidates | Select-Object -First 1
 
 if (-not $isccPath) {
-    throw "Inno Setup 6 is not installed. Download from https://jrsoftware.org/isinfo.php"
+    throw "Inno Setup 6 is not installed. Install with: winget install -e --id JRSoftware.InnoSetup"
 }
 
 & $isccPath `
