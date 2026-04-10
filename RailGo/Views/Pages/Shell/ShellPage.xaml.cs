@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 
+using Windows.Storage;
 using Windows.System;
 
 namespace RailGo.Views.Pages.Shell;
@@ -42,7 +43,7 @@ public sealed partial class ShellPage : Page
 
         _backgroundImageService.BackgroundImageChanged -= OnBackgroundImageChanged;
         _backgroundImageService.BackgroundImageChanged += OnBackgroundImageChanged;
-        ApplyBackgroundImage(_backgroundImageService.BackgroundImagePath);
+        _ = ApplyBackgroundImageAsync(_backgroundImageService.BackgroundImagePath);
     }
 
     private static KeyboardAccelerator BuildKeyboardAccelerator(VirtualKey key, VirtualKeyModifiers? modifiers = null)
@@ -77,14 +78,14 @@ public sealed partial class ShellPage : Page
     {
         if (DispatcherQueue.HasThreadAccess)
         {
-            ApplyBackgroundImage(imagePath);
+            _ = ApplyBackgroundImageAsync(imagePath);
             return;
         }
 
-        DispatcherQueue.TryEnqueue(() => ApplyBackgroundImage(imagePath));
+        DispatcherQueue.TryEnqueue(() => _ = ApplyBackgroundImageAsync(imagePath));
     }
 
-    private void ApplyBackgroundImage(string? imagePath)
+    private async Task ApplyBackgroundImageAsync(string? imagePath)
     {
         if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath))
         {
@@ -94,9 +95,14 @@ public sealed partial class ShellPage : Page
 
         try
         {
+            var file = await StorageFile.GetFileFromPathAsync(imagePath);
+            using var stream = await file.OpenReadAsync();
+            var bitmapImage = new BitmapImage();
+            await bitmapImage.SetSourceAsync(stream);
+
             RootGrid.Background = new ImageBrush
             {
-                ImageSource = new BitmapImage(new Uri(imagePath, UriKind.Absolute)),
+                ImageSource = bitmapImage,
                 Stretch = Stretch.UniformToFill,
                 Opacity = 0.25,
                 AlignmentX = AlignmentX.Center,
