@@ -1,0 +1,10 @@
+﻿{
+    "profiles": {
+      "RailGo (Package)": {
+        "commandName": "MsixPackage"
+      },
+      "RailGo (Unpackaged)": {
+        "commandName": "Project"
+      }
+    }
+}

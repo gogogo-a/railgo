@@ -1,0 +1,67 @@
+﻿<windowex:WindowEx
+    x:Class="RailGo.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:RailGo"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:windowex="using:WinUIEx"
+    MinWidth="500"
+    MinHeight="500"
+    PersistenceId="MainWindow"
+    mc:Ignorable="d">
+    <Window.SystemBackdrop>
+        <MicaBackdrop/>
+    </Window.SystemBackdrop>
+    <Grid>
+        <ProgressBar
+	        VerticalAlignment="Top"
+	        Visibility ="{x:Bind ViewModel.TaskIsInProgress, Mode=OneWay}"
+	        IsIndeterminate="True" />
+        <TabView x:Name="MainTabView"
+            Margin="0"
+            TabCloseRequested="Tab_TabCloseRequested"
+            HorizontalAlignment="Stretch" 
+            VerticalAlignment="Stretch"
+            CornerRadius="4"
+            CanDragTabs="True"
+            AllowDrop="True"
+            x:FieldModifier="public"
+            BorderThickness="0 1.5 0 0"
+            Background="Transparent">
+            <TabViewItem Header="Home"
+                IsClosable="False"
+                CanDrag="False"
+                Tag="CanNotDrag"
+                Loaded="OnCustomCustomTabViewLoaded"
+                Content="{x:Bind _shell}">
+                <TabViewItem.IconSource>
+                    <FontIconSource Glyph="&#xE80F;" />
+                </TabViewItem.IconSource>
+            </TabViewItem>
+            <TabView.TabStripFooter>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="RightPaddingColumn" Width="0" />
+                    </Grid.ColumnDefinitions>
+                    <Grid
+			            x:Name="DragAreaGrid"
+			            Grid.Column="0"
+			            Grid.ColumnSpan="2"
+			            HorizontalAlignment="Stretch"
+			            VerticalAlignment="Stretch"/>
+                </Grid>
+            </TabView.TabStripFooter>
+        </TabView>
+        <InfoBar
+            IsOpen="{x:Bind ViewModel.IfShowErrorInfoBarOpen, Mode=OneWay}"
+            Severity="Error"
+            Title="{x:Bind ViewModel.ShowErrorInfoBarTitle, Mode=OneWay, TargetNullValue=' -- '}"
+            Message="{x:Bind ViewModel.ShowErrorInfoBarContent, Mode=OneWay, TargetNullValue=' -- '}" 
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom" 
+            Margin="10"
+            Canvas.ZIndex="1"/>
+    </Grid>
+</windowex:WindowEx>

@@ -1,0 +1,75 @@
+﻿<Page
+    x:Class="RailGo.Views.Pages.Settings.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:helpers="using:RailGo.Helpers"
+    xmlns:xaml="using:Microsoft.UI.Xaml"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:ui="using:CommunityToolkit.WinUI"
+    mc:Ignorable="d">
+    <Grid>
+        <StackPanel x:Name="ContentArea">
+            <StackPanel Margin="{StaticResource SmallTopBottomMargin}">
+                <TextBlock Text="数据源设置" Style="{ThemeResource SubtitleTextBlockStyle}" 
+                               Margin="{StaticResource XSmallTopMargin}"/>
+                <controls:SettingsCard x:Name="DataSourcesSettingsCard"
+                               Click="OnDataSourcesSettingsCardClicked"
+                               Description="设置离线数据库，数据源集合，以及第三方数据等"
+                               Header="数据源设置"
+                               HeaderIcon="{ui:FontIcon Glyph=&#xE8A1;}"
+                               IsClickEnabled="True"
+                               Margin="{StaticResource XSmallTopMargin}">
+                </controls:SettingsCard>
+                <TextBlock x:Uid="Settings_Personalization" Style="{ThemeResource SubtitleTextBlockStyle}" 
+                               Margin="{StaticResource XSmallTopMargin}"/>
+                <controls:SettingsCard
+                               Description="颜色模式选择，选择浅色，深色，或跟随系统"
+                               Header="颜色模式选择"
+                               HeaderIcon="{ui:FontIcon Glyph=&#xE793;}"
+                               Margin="{StaticResource XSmallTopMargin}">
+                    <ComboBox
+                            x:Name="ThemeComboBox"
+                            Margin="{StaticResource XSmallTopMargin}"
+                            SelectionChanged="ThemeComboBox_SelectionChanged"
+                            FontSize="15">
+                        <ComboBoxItem Content="浅色" Tag="Light" />
+                        <ComboBoxItem Content="深色" Tag="Dark" />
+                        <ComboBoxItem Content="系统默认" Tag="Default" />
+                    </ComboBox>
+                </controls:SettingsCard>
+                <controls:SettingsCard
+                               Description="选择本地图片作为软件背景，可随时恢复默认背景"
+                               Header="背景图片"
+                               HeaderIcon="{ui:FontIcon Glyph=&#xE91B;}"
+                               Margin="{StaticResource XSmallTopMargin}">
+                    <StackPanel Margin="{StaticResource XSmallTopMargin}" Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="选择图片" Click="OnChooseBackgroundImageClicked" />
+                            <Button x:Name="ClearBackgroundButton" Content="恢复默认" Click="OnClearBackgroundImageClicked" />
+                        </StackPanel>
+                        <TextBlock
+                            x:Name="BackgroundImagePathTextBlock"
+                            Text="当前：默认背景"
+                            TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+                </controls:SettingsCard>
+
+
+            </StackPanel>
+
+            <TextBlock x:Uid="Settings_About" Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+            <StackPanel Margin="{StaticResource XSmallTopMargin}">
+                <TextBlock Text="{x:Bind ViewModel.VersionDescription, Mode=OneWay}" Style="{ThemeResource BodyTextBlockStyle}" />
+
+                <TextBlock
+                    x:Uid="Settings_AboutDescription"
+                    Margin="{StaticResource XSmallTopMargin}"
+                    Style="{ThemeResource BodyTextBlockStyle}" />
+                <HyperlinkButton x:Uid="SettingsPage_PrivacyTermsLink" Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Page>
