@@ -22,12 +22,15 @@
             <StackPanel Orientation="Horizontal" x:Name="SelectStationArea" Spacing="10" HorizontalAlignment="Center">
                 <StackPanel Orientation="Vertical">
                     <TextBlock VerticalAlignment="Center"><Bold>始发站：</Bold></TextBlock>
-                    <HyperlinkButton x:Name="OpenStationSelector_FromStation" Click="OpenStationSelector_FromStation_Click">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBox IsReadOnly="True" PlaceholderText="请选择一个车站" Text="{x:Bind ViewModel.FromStation.Name, Mode=OneWay}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBox
+                            Width="180"
+                            PlaceholderText="输入车站名或电报码"
+                            Text="{x:Bind ViewModel.FromStationKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button x:Name="OpenStationSelector_FromStation" Click="OpenStationSelector_FromStation_Click">
                             <FontIcon Glyph="&#xE721;" />
-                        </StackPanel>
-                    </HyperlinkButton>
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
                 <Button HorizontalAlignment="Center" Click="SwitchFromAndToButton_Click">
                     <FontIcon Glyph="&#xE8AB;" RenderTransformOrigin="0.5,0.5" Margin="3">
@@ -35,12 +38,15 @@
                 </Button>
                 <StackPanel Orientation="Vertical">
                     <TextBlock VerticalAlignment="Center"><Bold>终到站：</Bold></TextBlock>
-                    <HyperlinkButton x:Name="OpenStationSelector_ToStation" Click="OpenStationSelector_ToStation_Click">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBox IsReadOnly="True" PlaceholderText="请选择一个车站" Text="{x:Bind ViewModel.ToStation.Name, Mode=OneWay}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBox
+                            Width="180"
+                            PlaceholderText="输入车站名或电报码"
+                            Text="{x:Bind ViewModel.ToStationKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button x:Name="OpenStationSelector_ToStation" Click="OpenStationSelector_ToStation_Click">
                             <FontIcon Glyph="&#xE721;" />
-                        </StackPanel>
-                    </HyperlinkButton>
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
                 <CalendarDatePicker PlaceholderText="选择日期" HorizontalAlignment="Center" Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}"/>
                 <CheckBox Content="是否允许包含同城车站" IsChecked="{x:Bind ViewModel.AllowCitysIsOpen, Mode=TwoWay}"/>

@@ -86,7 +86,13 @@ public sealed partial class SettingsPage : Page
 
     private async void OnChooseBackgroundImageClicked(object sender, RoutedEventArgs e)
     {
-        await _backgroundImageService.PickAndSetBackgroundImageAsync();
+        var isSuccess = await _backgroundImageService.PickAndSetBackgroundImageAsync();
+        if (!isSuccess)
+        {
+            BackgroundImagePathTextBlock.Text = "设置失败：请确认图片可访问，或重试选择 jpg/png/bmp/webp。";
+            return;
+        }
+
         UpdateBackgroundImageUiState();
     }
 

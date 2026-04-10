@@ -39,7 +39,7 @@ public sealed partial class StationToStationPage : Page
     private void OpenStationSelector_ToStation_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PageFrame.Content = ToStationSelector;
-        ViewModel.ContentText = "选择终到车站in";
+        ViewModel.ContentText = "选择终到车站";
         ViewModel.SelectTeachingTipIsOpen = true;
     }
 
@@ -47,8 +47,12 @@ public sealed partial class StationToStationPage : Page
     {
         var From = ViewModel.FromStation;
         var To = ViewModel.ToStation;
+        var fromKeyword = ViewModel.FromStationKeyword;
+        var toKeyword = ViewModel.ToStationKeyword;
         ViewModel.FromStation = To;
         ViewModel.ToStation = From;
+        ViewModel.FromStationKeyword = toKeyword;
+        ViewModel.ToStationKeyword = fromKeyword;
     }
 
     private void CloseStationChooseButton_Click(object sender, RoutedEventArgs e)

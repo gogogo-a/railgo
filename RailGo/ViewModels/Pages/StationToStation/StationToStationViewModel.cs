@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Net.Http;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using Newtonsoft.Json;
 using RailGo.Core.Models.Messages;
 using RailGo.Core.Models.QueryDatas;
 using RailGo.Services;
@@ -21,7 +20,13 @@ public partial class StationToStationViewModel : ObservableRecipient
     private StationPreselectResult fromStation;
 
     [ObservableProperty]
+    private string fromStationKeyword;
+
+    [ObservableProperty]
     private StationPreselectResult toStation;
+
+    [ObservableProperty]
+    private string toStationKeyword;
 
     [ObservableProperty]
     private bool selectTeachingTipIsOpen;
@@ -30,13 +35,10 @@ public partial class StationToStationViewModel : ObservableRecipient
     private bool allowCitysIsOpen = true;
 
     [ObservableProperty]
-    private DateTimeOffset startDate = new DateTimeOffset(DateTime.Now);
+    private DateTimeOffset startDate = new(DateTime.Now);
 
     [ObservableProperty]
     public ObservableCollection<TrainRunInfo> trainResults;
-
-    // 预留 API URL
-    private const string ApiUrl = "https://data.railgo.zenglingkun.cn/api/train/sts_query?from={0}&to={1}&date=20251130";
 
     public StationToStationViewModel()
     {
@@ -55,25 +57,79 @@ public partial class StationToStationViewModel : ObservableRecipient
         });
     }
 
+    partial void OnFromStationChanged(StationPreselectResult value)
+    {
+        if (value != null)
+        {
+            FromStationKeyword = value.Name;
+        }
+    }
+
+    partial void OnToStationChanged(StationPreselectResult value)
+    {
+        if (value != null)
+        {
+            ToStationKeyword = value.Name;
+        }
+    }
+
     public async Task QueryTrainListAsync()
     {
-        if (FromStation == null || ToStation == null)
+        var queryService = App.GetService<QueryService>();
+        var resolvedFromStation = await ResolveStationAsync(queryService, FromStation, FromStationKeyword);
+        var resolvedToStation = await ResolveStationAsync(queryService, ToStation, ToStationKeyword);
+
+        if (resolvedFromStation == null || resolvedToStation == null)
         {
-            ContentText = "请选择始发站和终到站";
+            ContentText = "请正确填写始发站和终到站（可输入站名/电报码，或点击右侧按钮选择）";
             return;
         }
 
-        string url = string.Format(ApiUrl, FromStation.TeleCode, ToStation.TeleCode);
+        FromStation = resolvedFromStation;
+        ToStation = resolvedToStation;
 
         try
         {
-            var queryService = App.GetService<QueryService>();
-            TrainResults = await queryService.QueryStationToStationQueryAsync(FromStation.TeleCode, ToStation.TeleCode, StartDate.ToString("yyyyMMdd"), AllowCitysIsOpen);
+            TrainResults = await queryService.QueryStationToStationQueryAsync(
+                resolvedFromStation.TeleCode,
+                resolvedToStation.TeleCode,
+                StartDate.ToString("yyyyMMdd"),
+                AllowCitysIsOpen);
             Trace.WriteLine($"查询到 {TrainResults.Count} 条结果");
         }
         catch (Exception ex)
         {
             Trace.WriteLine($"查询失败：{ex.Message}");
         }
+    }
+
+    private static async Task<StationPreselectResult?> ResolveStationAsync(
+        QueryService queryService,
+        StationPreselectResult? selectedStation,
+        string? inputKeyword)
+    {
+        if (selectedStation != null && !string.IsNullOrWhiteSpace(selectedStation.TeleCode))
+        {
+            return selectedStation;
+        }
+
+        if (string.IsNullOrWhiteSpace(inputKeyword))
+        {
+            return null;
+        }
+
+        var normalizedInput = inputKeyword.Trim();
+        var stations = await queryService.QueryStationPreselectAsync(normalizedInput);
+        if (stations == null || stations.Count == 0)
+        {
+            return null;
+        }
+
+        var exactMatch = stations.FirstOrDefault(station =>
+            string.Equals(station.Name, normalizedInput, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(station.TeleCode, normalizedInput, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(station.PinyinTriple, normalizedInput, StringComparison.OrdinalIgnoreCase));
+
+        return exactMatch ?? stations.FirstOrDefault();
     }
 }

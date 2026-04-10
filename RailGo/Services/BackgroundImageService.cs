@@ -1,4 +1,5 @@
 ﻿using RailGo.Contracts.Services;
+using RailGo.Helpers;
 
 using WinRT.Interop;
 
@@ -10,6 +11,7 @@ namespace RailGo.Services;
 public class BackgroundImageService : IBackgroundImageService
 {
     private const string SettingsKey = "AppCustomBackgroundImagePath";
+    private const string NonMsixAppDataFolder = "RailGo/ApplicationData";
     private const string BackgroundFolderName = "Backgrounds";
     private const string BackgroundFilePrefix = "custom-background";
 
@@ -66,11 +68,8 @@ public class BackgroundImageService : IBackgroundImageService
                 return false;
             }
 
-            var backgroundFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(
-                BackgroundFolderName,
-                CreationCollisionOption.OpenIfExists);
-
-            await DeleteExistingBackgroundFilesAsync(backgroundFolder);
+            var backgroundFolderPath = EnsureBackgroundFolder();
+            DeleteExistingBackgroundFiles(backgroundFolderPath);
 
             var fileExtension = pickedFile.FileType;
 
@@ -79,12 +78,10 @@ public class BackgroundImageService : IBackgroundImageService
                 fileExtension = ".png";
             }
 
-            var copiedFile = await pickedFile.CopyAsync(
-                backgroundFolder,
-                $"{BackgroundFilePrefix}{fileExtension}",
-                NameCollisionOption.ReplaceExisting);
+            var destinationPath = Path.Combine(backgroundFolderPath, $"{BackgroundFilePrefix}{fileExtension.ToLowerInvariant()}");
+            File.Copy(pickedFile.Path, destinationPath, overwrite: true);
 
-            BackgroundImagePath = copiedFile.Path;
+            BackgroundImagePath = destinationPath;
             await _localSettingsService.SaveSettingAsync(SettingsKey, BackgroundImagePath);
             BackgroundImageChanged?.Invoke(this, BackgroundImagePath);
 
@@ -98,31 +95,53 @@ public class BackgroundImageService : IBackgroundImageService
 
     public async Task ClearBackgroundImageAsync()
     {
-        var backgroundFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(
-            BackgroundFolderName,
-            CreationCollisionOption.OpenIfExists);
-
-        await DeleteExistingBackgroundFilesAsync(backgroundFolder);
+        var backgroundFolderPath = EnsureBackgroundFolder();
+        DeleteExistingBackgroundFiles(backgroundFolderPath);
 
         BackgroundImagePath = null;
         await _localSettingsService.SaveSettingAsync<string?>(SettingsKey, null);
         BackgroundImageChanged?.Invoke(this, null);
     }
 
-    private static async Task DeleteExistingBackgroundFilesAsync(StorageFolder folder)
+    private static void DeleteExistingBackgroundFiles(string folderPath)
     {
-        var files = await folder.GetFilesAsync();
+        if (!Directory.Exists(folderPath))
+        {
+            return;
+        }
 
-        foreach (var file in files.Where(file => file.Name.StartsWith(BackgroundFilePrefix, StringComparison.OrdinalIgnoreCase)))
+        foreach (var filePath in Directory.EnumerateFiles(folderPath)
+            .Where(path => Path.GetFileName(path).StartsWith(BackgroundFilePrefix, StringComparison.OrdinalIgnoreCase)))
         {
             try
             {
-                await file.DeleteAsync(StorageDeleteOption.PermanentDelete);
+                File.Delete(filePath);
             }
             catch
             {
                 // Ignore files that cannot be deleted immediately.
             }
         }
+    }
+
+    private static string EnsureBackgroundFolder()
+    {
+        string baseFolder;
+
+        if (RuntimeHelper.IsMSIX)
+        {
+            baseFolder = ApplicationData.Current.LocalFolder.Path;
+        }
+        else
+        {
+            baseFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                NonMsixAppDataFolder);
+        }
+
+        var backgroundFolderPath = Path.Combine(baseFolder, BackgroundFolderName);
+        Directory.CreateDirectory(backgroundFolderPath);
+
+        return backgroundFolderPath;
     }
 }
